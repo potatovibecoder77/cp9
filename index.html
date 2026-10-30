@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CP9 Esport Roster</title>
+<style>
+:root{--bg:#06050a;--card:#111016;--text:#f5f3f7;--muted:#9a93a3;--line:#2a2230;--brand:#8b1a7a;--brand-hi:#d04bbb;--danger:#ff6b8a;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:820px;margin:0 auto;padding:24px 16px 48px}
+header{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+header img{width:84px;height:84px;border-radius:16px;border:1px solid var(--line);object-fit:cover}
+h1{margin:0;font-size:1.7rem}
+h1 span{color:var(--brand-hi)}
+h2{margin:0 0 12px;font-size:1.2rem}
+.sub{color:var(--muted);margin:2px 0 0}
+.badge{display:inline-block;margin-top:6px;padding:2px 10px;border-radius:99px;background:var(--brand);color:#fff;font-size:.8rem;font-weight:700}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px}
+form{display:grid;grid-template-columns:1fr 1fr auto;gap:10px}
+@media (max-width:560px){form{grid-template-columns:1fr}}
+input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit}
+input[type=checkbox]{width:auto;accent-color:var(--brand-hi)}
+input:focus{outline:2px solid var(--brand-hi)}
+button{padding:10px 18px;border:0;border-radius:10px;background:var(--brand);color:#fff;font:inherit;font-weight:700;cursor:pointer}
+button:hover{background:#a3208f}
+button.ghost{background:transparent;color:var(--danger);padding:6px 10px;font-weight:500}
+.tabs{display:flex;gap:8px;margin-bottom:16px}
+.tabs button{background:var(--card);border:1px solid var(--line);color:var(--muted)}
+.tabs button.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.wrap{overflow-x:auto;margin-top:12px}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--muted);font-size:.8rem;text-transform:uppercase}
+td.n{color:var(--muted);width:40px}
+.ign{font-weight:700;cursor:pointer;color:var(--brand-hi)}
+.empty{text-align:center;color:var(--muted);padding:24px}
+.note{font-size:.85rem;color:var(--muted);margin-top:8px}
+.actions{display:flex;gap:10px;margin-top:12px;align-items:center}
+.pick{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:99px;border:1px solid var(--line);cursor:pointer}
+.bracket{display:flex;gap:20px;align-items:stretch;min-width:max-content}
+.col{display:flex;flex-direction:column;justify-content:space-around;gap:12px;min-width:170px}
+.col h3{margin:0;font-size:.8rem;text-transform:uppercase;color:var(--muted)}
+.match{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.slot{padding:8px 12px;cursor:pointer;background:var(--bg)}
+.slot+.slot{border-top:1px solid var(--line)}
+.slot em{color:var(--muted)}
+.slot.win{background:var(--brand);color:#fff;font-weight:700}
+.slot.lose{color:var(--muted);text-decoration:line-through}
+.champ{padding:12px 16px;margin-bottom:12px;border-radius:10px;background:var(--brand);color:#fff;font-size:1.1rem}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="1.jpg" alt="CP9 Esport logo">
+    <div>
+      <h1>CP9 <span>Esport</span></h1>
+      <p class="sub"><span id="count">0</span> members · click an IGN to copy it</p>
+      <span class="badge">CODM</span>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="on" data-tab="roster">Roster</button>
+    <button data-tab="bracket">Bracket</button>
+  </nav>
+
+  <section id="tab-roster">
+    <div class="card">
+      <form id="f">
+        <input id="ign" placeholder="CODM IGN" required maxlength="40">
+        <input id="name" placeholder="Real name" maxlength="60">
+        <button type="submit">Add member</button>
+      </form>
+      <div class="note">Saved in this browser only.</div>
+    </div>
+    <div class="card">
+      <input id="q" placeholder="Search IGN or name...">
+      <div class="wrap">
+        <table>
+          <thead><tr><th>#</th><th>IGN</th><th>Name</th><th></th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="empty" hidden>No members yet. Add the first one above.</div>
+    </div>
+  </section>
+
+  <section id="tab-bracket" hidden>
+    <div class="card">
+      <input id="tname" placeholder="Tournament name" maxlength="60">
+      <p class="note">Pick who plays, then generate. Click a player in a match to mark them the winner.</p>
+      <div id="pick" class="pick"></div>
+      <div class="actions">
+        <button id="gen">Shuffle &amp; generate</button>
+        <button id="clr" class="ghost">Clear bracket</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2 id="bname"></h2>
+      <div id="champ"></div>
+      <div class="wrap"><div id="bracket" class="bracket"></div></div>
+      <div class="empty" id="bempty">No bracket yet. Generate one above.</div>
+    </div>
+  </section>
+</main>
+
+<script>
+var members = [];
+var bk = null;
+var off = {};            // IGNs that are unticked in the bracket picker
+var KEY = "cp9-roster";
+var BKEY = "cp9-bracket";
+
+function $(id){ return document.getElementById(id); }
+function esc(s){ var d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+
+function saveRoster(){ localStorage.setItem(KEY, JSON.stringify(members)); }
+function saveBracket(){
+  if (bk) localStorage.setItem(BKEY, JSON.stringify(bk));
+  else localStorage.removeItem(BKEY);
+}
+
+/* ---------- Roster ---------- */
+function renderRoster(){
+  var q = $("q").value.trim().toLowerCase();
+  var list = members.filter(function(m){
+    return !q || (m.ign + " " + m.name).toLowerCase().indexOf(q) !== -1;
+  });
+  list.sort(function(a, b){ return a.ign.localeCompare(b.ign); });
+  $("count").textContent = members.length;
+  $("empty").hidden = list.length > 0;
+  $("rows").innerHTML = list.map(function(m, i){
+    return '<tr><td class="n">' + (i + 1) + '</td>' +
+      '<td><span class="ign" data-ign="' + esc(m.ign) + '">' + esc(m.ign) + '</span></td>' +
+      '<td>' + esc(m.name || "-") + '</td>' +
+      '<td><button class="ghost" data-del="' + esc(m.id) + '">Remove</button></td></tr>';
+  }).join("");
+}
+
+$("f").addEventListener("submit", function(e){
+  e.preventDefault();
+  members.push({ id: String(Date.now()), ign: $("ign").value.trim(), name: $("name").value.trim() });
+  saveRoster();
+  $("ign").value = "";
+  $("name").value = "";
+  $("ign").focus();
+  render();
+});
+
+$("q").addEventListener("input", renderRoster);
+
+$("rows").addEventListener("click", function(e){
+  var del = e.target.closest("[data-del]");
+  if (del) {
+    if (confirm("Remove this member?")) {
+      members = members.filter(function(m){ return m.id !== del.dataset.del; });
+      saveRoster();
+      render();
+    }
+    return;
+  }
+  var tag = e.target.closest("[data-ign]");
+  if (tag) {
+    navigator.clipboard.writeText(tag.dataset.ign);
+    tag.textContent = "Copied!";
+    setTimeout(renderRoster, 700);
+  }
+});
+
+/* ---------- Bracket ---------- */
+function renderPick(){
+  var names = members.map(function(m){ return m.ign; });
+  names.sort(function(a, b){ return a.localeCompare(b); });
+  $("pick").innerHTML = names.map(function(n){
+    return '<label class="chip"><input type="checkbox" data-pick="' + esc(n) + '"' +
+      (off[n] ? "" : " checked") + '> ' + esc(n) + '</label>';
+  }).join("") || '<span class="note">Add members in the Roster tab first.</span>';
+}
+
+$("pick").addEventListener("change", function(e){
+  var c = e.target.closest("[data-pick]");
+  if (!c) return;
+  if (c.checked) delete off[c.dataset.pick];
+  else off[c.dataset.pick] = true;
+});
+
+// seed order so top seeds meet the lowest seeds (and get the byes)
+function seedOrder(size){
+  var o = [1];
+  while (o.length < size) {
+    var m = o.length * 2, next = [];
+    for (var i = 0; i < o.length; i++) next.push(o[i], m + 1 - o[i]);
+    o = next;
+  }
+  return o;
+}
+
+// fill each round from the one before and auto-advance byes
+function fixBracket(){
+  for (var r = 0; r < bk.rounds.length; r++) {
+    for (var j = 0; j < bk.rounds[r].length; j++) {
+      var m = bk.rounds[r][j];
+      if (r > 0) {
+        m.a = bk.rounds[r - 1][2 * j].w;
+        m.b = bk.rounds[r - 1][2 * j + 1].w;
+      }
+      if (m.w && m.w !== m.a && m.w !== m.b) m.w = null;
+      if (r === 0) {
+        if (m.a && !m.b) m.w = m.a;
+        else if (m.b && !m.a) m.w = m.b;
+      }
+    }
+  }
+}
+
+function generate(){
+  var names = [];
+  members.forEach(function(m){
+    if (m.ign && !off[m.ign] && names.indexOf(m.ign) === -1) names.push(m.ign);
+  });
+  if (names.length < 2) { alert("Pick at least 2 players."); return; }
+  if (bk && !confirm("Replace the current bracket?")) return;
+
+  for (var i = names.length - 1; i > 0; i--) {   // shuffle
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = names[i]; names[i] = names[j]; names[j] = t;
+  }
+
+  var size = 2;
+  while (size < names.length) size *= 2;
+  var order = seedOrder(size);
+
+  var round1 = [];
+  for (var k = 0; k < size; k += 2) {
+    round1.push({ a: names[order[k] - 1] || null, b: names[order[k + 1] - 1] || null, w: null });
+  }
+  var rounds = [round1];
+  var n = size / 2;
+  while (n > 1) {
+    n = n / 2;
+    var rd = [];
+    for (var x = 0; x < n; x++) rd.push({ a: null, b: null, w: null });
+    rounds.push(rd);
+  }
+
+  bk = { name: $("tname").value.trim() || "CP9 Tournament", rounds: rounds };
+  fixBracket();
+  saveBracket();
+  renderBracket();
+}
+
+function roundName(r, total){
+  var left = total - r;
+  if (left === 1) return "Final";
+  if (left === 2) return "Semifinals";
+  if (left === 3) return "Quarterfinals";
+  return "Round " + (r + 1);
+}
+
+function renderBracket(){
+  $("bempty").hidden = !!bk;
+  $("champ").innerHTML = "";
+  $("bname").textContent = bk ? bk.name : "";
+  if (!bk) { $("bracket").innerHTML = ""; return; }
+
+  var total = bk.rounds.length, html = "";
+  bk.rounds.forEach(function(rd, r){
+    html += '<div class="col"><h3>' + roundName(r, total) + '</h3>';
+    rd.forEach(function(m, j){
+      html += '<div class="match">';
+      ["a", "b"].forEach(function(s){
+        var cls = "slot";
+        if (m.w && m.w === m[s]) cls += " win";
+        else if (m.w && m[s]) cls += " lose";
+        var text = m[s] ? esc(m[s]) : "<em>" + (r === 0 ? "BYE" : "TBD") + "</em>";
+        html += '<div class="' + cls + '" data-r="' + r + '" data-m="' + j + '" data-s="' + s + '">' + text + '</div>';
+      });
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+  $("bracket").innerHTML = html;
+
+  var final = bk.rounds[total - 1][0];
+  if (final.w) $("champ").innerHTML = '<div class="champ">Champion: <b>' + esc(final.w) + '</b></div>';
+}
+
+$("gen").addEventListener("click", generate);
+
+$("clr").addEventListener("click", function(){
+  if (bk && confirm("Clear the bracket?")) { bk = null; saveBracket(); renderBracket(); }
+});
+
+$("bracket").addEventListener("click", function(e){
+  var p = e.target.closest("[data-r]");
+  if (!p || !bk) return;
+  var m = bk.rounds[Number(p.dataset.r)][Number(p.dataset.m)];
+  var who = m[p.dataset.s];
+  if (!m.a || !m.b || !who) return;       // byes are automatic
+  m.w = (m.w === who) ? null : who;       // click again to undo
+  fixBracket();
+  saveBracket();
+  renderBracket();
+});
+
+/* ---------- Tabs ---------- */
+document.querySelector(".tabs").addEventListener("click", function(e){
+  var b = e.target.closest("[data-tab]");
+  if (!b) return;
+  document.querySelectorAll(".tabs button").forEach(function(x){
+    x.classList.toggle("on", x === b);
+  });
+  $("tab-roster").hidden = b.dataset.tab !== "roster";
+  $("tab-bracket").hidden = b.dataset.tab !== "bracket";
+});
+
+/* ---------- Start ---------- */
+function render(){ renderRoster(); renderPick(); renderBracket(); }
+
+try { members = JSON.parse(localStorage.getItem(KEY) || "[]"); } catch(e){ members = []; }
+try { bk = JSON.parse(localStorage.getItem(BKEY) || "null"); } catch(e){ bk = null; }
+render();
+</script>
+</body>
+</html>
